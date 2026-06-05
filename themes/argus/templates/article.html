@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} &middot; {{ SITENAME }}{% endblock %}
+
+{% block body %}
+{% set sevclass = (article.metadata.severity or 'info')|lower|replace('/', ' ')|trim %}
+{% set sevclass = sevclass.split(' ')[0] %}
+<article class="advisory">
+    <div class="container">
+        <p class="back"><a href="{{ SITEURL }}/">&larr; ALL ADVISORIES</a></p>
+
+        <header class="advisory-header">
+            <div class="row">
+                <span class="badge sev-{{ sevclass }}">{{ (article.metadata.severity or 'Info')|upper }}</span>
+                {% if article.metadata.state %}<span class="state">{{ article.metadata.state }}</span>{% endif %}
+                <time class="mono muted" datetime="{{ article.date.isoformat() }}" style="font-size:0.85rem;">{{ article.date|strftime('%Y-%m-%d') }}</time>
+            </div>
+            <h1>{{ article.title }}</h1>
+            {% if article.summary %}<p class="lede">{{ article.summary|striptags }}</p>{% endif %}
+        </header>
+
+        <dl class="facts">
+            {% if article.metadata.cve %}<dt>CVE</dt><dd>{{ article.metadata.cve }}</dd>{% endif %}
+            {% if article.metadata.cvss %}<dt>CVSS</dt><dd>{{ article.metadata.cvss }}</dd>{% endif %}
+            {% if article.metadata.vendor %}<dt>Vendor</dt><dd>{{ article.metadata.vendor }}</dd>{% endif %}
+            {% if article.metadata.product %}<dt>Product</dt><dd>{{ article.metadata.product }}</dd>{% endif %}
+            {% if article.metadata.affected %}<dt>Affected</dt><dd>{{ article.metadata.affected }}</dd>{% endif %}
+            {% if article.metadata.fixed %}<dt>Fixed in</dt><dd>{{ article.metadata.fixed }}</dd>{% endif %}
+            {% if article.metadata.credit %}<dt>Credit</dt><dd>{{ article.metadata.credit }}</dd>{% endif %}
+        </dl>
+
+        <div class="advisory-content">
+            {{ article.content }}
+        </div>
+
+        {% if article.tags %}
+        <footer class="advisory-footer">
+            <div class="chips">
+                {% for tag in article.tags %}<a class="chip" href="{{ SITEURL }}/{{ tag.url }}">#{{ tag }}</a>{% endfor %}
+            </div>
+        </footer>
+        {% endif %}
+    </div>
+</article>
+{% endblock %}

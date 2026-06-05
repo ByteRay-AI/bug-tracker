@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block body %}
+{% set advisories = articles_page.object_list if articles_page else articles %}
+
+<header class="hero">
+    <div class="hero-eye"></div>
+    <div class="hero-bg"></div>
+    <div class="container">
+        <p class="eyebrow">Public Security Advisories</p>
+        <h1>Proof of <span class="accent">Position.</span></h1>
+        <p class="lede">Coordinated vulnerability disclosures from Argus. Findings, impact, and remediation, published in good faith.</p>
+        {% set all_advisories = articles if articles else advisories %}
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="n">{{ all_advisories|length }}</div>
+                <div class="l">Advisories</div>
+            </div>
+            {% set ns = namespace(high=0) %}
+            {% for a in all_advisories %}{% if (a.metadata.severity or '')|lower|trim and (a.metadata.severity|lower).startswith('high') %}{% set ns.high = ns.high + 1 %}{% endif %}{% endfor %}
+            {% set high = ns.high %}
+            <div class="hero-stat">
+                <div class="n gold">{{ high }}</div>
+                <div class="l">High</div>
+            </div>
+            <div class="hero-stat">
+                <div class="n">{{ all_advisories|map(attribute='date.year')|list|first or '—' }}</div>
+                <div class="l">Latest</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<section class="section">
+    <div class="container">
+        <div class="section-head">
+            <h2>All advisories</h2>
+        </div>
+
+        {% if advisories %}
+        <ul class="advisory-list">
+            {# Sort by severity (critical→high→medium→low→info) then by date (newest first) #}
+            {% set critical = [] %}
+            {% set high = [] %}
+            {% set medium = [] %}
+            {% set low = [] %}
+            {% set info = [] %}
+            {% for article in advisories %}
+                {% set sev = (article.metadata.severity or 'info')|lower|replace('/', ' ')|trim %}
+                {% set sev = sev.split(' ')[0] %}
+                {% if sev == 'critical' %}{% set _ = critical.append(article) %}
+                {% elif sev == 'high' %}{% set _ = high.append(article) %}
+                {% elif sev == 'medium' %}{% set _ = medium.append(article) %}
+                {% elif sev == 'low' %}{% set _ = low.append(article) %}
+                {% else %}{% set _ = info.append(article) %}{% endif %}
+            {% endfor %}
+            {% set sorted_advisories = (critical|sort(attribute='date', reverse=true)) + (high|sort(attribute='date', reverse=true)) + (medium|sort(attribute='date', reverse=true)) + (low|sort(attribute='date', reverse=true)) + (info|sort(attribute='date', reverse=true)) %}
+            {% for article in sorted_advisories %}
+            {% set sevclass = (article.metadata.severity or 'info')|lower|replace('/', ' ')|truncate(20, true, '')|trim %}
+            {% set sevclass = sevclass.split(' ')[0] %}
+            <li class="advisory-row">
+                <div class="advisory-meta">
+                    <span class="badge sev-{{ sevclass }}">{{ (article.metadata.severity or 'Info')|upper }}</span>
+                    <time datetime="{{ article.date.isoformat() }}">{{ article.date|strftime('%Y-%m-%d') }}</time>
+                    {% if article.metadata.state %}<span class="state">{{ article.metadata.state }}</span>{% endif %}
+                </div>
+                <div class="advisory-body">
+                    <h3 class="advisory-title"><a href="{{ SITEURL }}/{{ article.url }}">{{ article.title }}</a></h3>
+                    {% if article.summary %}<p class="advisory-summary">{{ article.summary|striptags }}</p>{% endif %}
+                    <div class="chips">
+                        {% if article.metadata.cve %}<span class="chip chip-cve">{{ article.metadata.cve }}</span>{% endif %}
+                        {% if article.metadata.vendor %}<span class="chip">{{ article.metadata.vendor }}{% if article.metadata.product %} / {{ article.metadata.product }}{% endif %}</span>{% endif %}
+                        {% for tag in article.tags %}<a class="chip" href="{{ SITEURL }}/{{ tag.url }}">#{{ tag }}</a>{% endfor %}
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty">// No advisories yet. Drop a Markdown file into content/advisories/ to publish one.</p>
+        {% endif %}
+
+        {% if articles_page and articles_paginator.num_pages > 1 %}
+        <nav class="pagination">
+            {% if articles_page.has_previous() %}<a href="{{ SITEURL }}/{{ articles_previous_page.url }}">&larr; Newer</a>{% endif %}
+            <span>Page {{ articles_page.number }} / {{ articles_paginator.num_pages }}</span>
+            {% if articles_page.has_next() %}<a href="{{ SITEURL }}/{{ articles_next_page.url }}">Older &rarr;</a>{% endif %}
+        </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

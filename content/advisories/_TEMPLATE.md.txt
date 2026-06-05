@@ -1,0 +1,54 @@
+Title: Short descriptive advisory title
+Date: 2026-06-05 12:00
+Severity: Critical
+State: Reported
+Vendor: Vendor name
+Product: Product name
+Affected: <= 1.2.3
+Fixed: 1.2.4
+CVE: CVE-2026-NNNNN
+CVSS: 0.0 (vector string)
+Credit: shahriyar
+Tags: rce, web
+Summary: One- or two-sentence summary shown in the advisory list on the homepage.
+
+## Summary
+
+What the issue is, in a sentence or two.
+
+## Affected Versions
+
+- Product `<= x.y.z`
+
+## Details
+
+Technical details, proof of concept, request/response, etc.
+
+## Impact
+
+What an attacker can achieve.
+
+## Remediation
+
+How to fix or mitigate.
+
+## Timeline
+
+- 2026-06-01 — Reported to vendor
+- 2026-06-05 — Public disclosure
+
+<!--
+HOW TO ADD A NEW ADVISORY
+=========================
+1. Copy this file into content/advisories/ and rename it, e.g.
+   2026-06-10-vendor-product-issue.md  (the date prefix keeps the folder tidy;
+   the actual sort order comes from the "Date:" metadata above).
+2. Fill in the metadata block at the top. Required: Title, Date. Everything
+   else is optional and only shown if present.
+   - Severity:  Critical | High | Medium | Low | Info  (drives the badge color)
+   - State:     free text, e.g. Reported / Disclosed / Patched / Won't Fix
+   - Do NOT use a field called "Status:" — Pelican reserves it for draft/publish.
+   - To keep an advisory as an unpublished draft, add a line:  Status: draft
+3. Rebuild:  uv run pelican content      (or  uv run pelican --autoreload --listen
+   for a live-reloading preview at http://localhost:8000)
+-->
