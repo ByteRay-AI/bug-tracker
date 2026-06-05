@@ -11,16 +11,23 @@
         <h1>Proof of <span class="accent">Position.</span></h1>
         <p class="lede">Coordinated vulnerability disclosures from Argus. Findings, impact, and remediation, published in good faith.</p>
         {% set all_advisories = articles if articles else advisories %}
+        {% set ns = namespace(critical=0, high=0) %}
+        {% for a in all_advisories %}
+            {% set sev = (a.metadata.severity or '')|lower %}
+            {% if sev.startswith('critical') %}{% set ns.critical = ns.critical + 1 %}
+            {% elif sev.startswith('high') %}{% set ns.high = ns.high + 1 %}{% endif %}
+        {% endfor %}
         <div class="hero-stats">
             <div class="hero-stat">
                 <div class="n">{{ all_advisories|length }}</div>
                 <div class="l">Advisories</div>
             </div>
-            {% set ns = namespace(high=0) %}
-            {% for a in all_advisories %}{% if (a.metadata.severity or '')|lower|trim and (a.metadata.severity|lower).startswith('high') %}{% set ns.high = ns.high + 1 %}{% endif %}{% endfor %}
-            {% set high = ns.high %}
             <div class="hero-stat">
-                <div class="n gold">{{ high }}</div>
+                <div class="n" style="color:var(--sev-critical)">{{ ns.critical }}</div>
+                <div class="l">Critical</div>
+            </div>
+            <div class="hero-stat">
+                <div class="n gold">{{ ns.high }}</div>
                 <div class="l">High</div>
             </div>
             <div class="hero-stat">
