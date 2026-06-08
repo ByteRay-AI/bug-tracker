@@ -1,5 +1,5 @@
 AUTHOR = "Argus"
-SITENAME = "Argus Proof of Position"
+SITENAME = "Argus Proof of Possession"
 SITESUBTITLE = "Public Security Advisories"
 SITEURL = ""
 
