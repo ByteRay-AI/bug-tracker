@@ -31,9 +31,9 @@ jobs:
 
       - name: Build site
         env:
-          # Derives the canonical URL from the repo: https://<owner>.github.io/<repo>
+          # Defaults to the custom domain; override with a repository variable if it changes.
           # Override by setting a repository variable SITEURL if you use a custom domain.
-          SITEURL: ${{ vars.SITEURL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
+          SITEURL: ${{ vars.SITEURL || 'https://poc.argus-systems.ai' }}
         run: |
           uv run pelican content --settings publishconf.py
 
