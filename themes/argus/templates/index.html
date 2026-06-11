@@ -46,7 +46,9 @@
 
         {% if advisories %}
         <ul class="advisory-list">
-            {# Sort by severity (critical→high→medium→low→info) then by date (newest first) #}
+            {# Sort by date (newest first), then by severity (critical→high→medium→low→info)
+               as a tie-breaker.  Jinja's sort is stable, so we order by the secondary key
+               (severity) first, then stable-sort by the primary key (date desc). #}
             {% set critical = [] %}
             {% set high = [] %}
             {% set medium = [] %}
@@ -61,7 +63,8 @@
                 {% elif sev == 'low' %}{% set _ = low.append(article) %}
                 {% else %}{% set _ = info.append(article) %}{% endif %}
             {% endfor %}
-            {% set sorted_advisories = (critical|sort(attribute='date', reverse=true)) + (high|sort(attribute='date', reverse=true)) + (medium|sort(attribute='date', reverse=true)) + (low|sort(attribute='date', reverse=true)) + (info|sort(attribute='date', reverse=true)) %}
+            {% set by_severity = critical + high + medium + low + info %}
+            {% set sorted_advisories = by_severity|sort(attribute='date', reverse=true) %}
             {% for article in sorted_advisories %}
             {% set sevclass = (article.metadata.severity or 'info')|lower|replace('/', ' ')|truncate(20, true, '')|trim %}
             {% set sevclass = sevclass.split(' ')[0] %}
