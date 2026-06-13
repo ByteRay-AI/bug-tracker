@@ -39,53 +39,100 @@
 </header>
 
 <section class="section">
-    <div class="container">
-        <div class="section-head">
-            <h2>All advisories</h2>
-        </div>
-
+    <div class="container-wide">
         {% if advisories %}
-        <ul class="advisory-list">
-            {# Sort by date (newest first), then by severity (critical→high→medium→low→info)
-               as a tie-breaker.  Jinja's sort is stable, so we order by the secondary key
-               (severity) first, then stable-sort by the primary key (date desc). #}
-            {% set critical = [] %}
-            {% set high = [] %}
-            {% set medium = [] %}
-            {% set low = [] %}
-            {% set info = [] %}
-            {% for article in advisories %}
-                {% set sev = (article.metadata.severity or 'info')|lower|replace('/', ' ')|trim %}
-                {% set sev = sev.split(' ')[0] %}
-                {% if sev == 'critical' %}{% set _ = critical.append(article) %}
-                {% elif sev == 'high' %}{% set _ = high.append(article) %}
-                {% elif sev == 'medium' %}{% set _ = medium.append(article) %}
-                {% elif sev == 'low' %}{% set _ = low.append(article) %}
-                {% else %}{% set _ = info.append(article) %}{% endif %}
-            {% endfor %}
-            {% set by_severity = critical + high + medium + low + info %}
-            {% set sorted_advisories = by_severity|sort(attribute='date', reverse=true) %}
-            {% for article in sorted_advisories %}
-            {% set sevclass = (article.metadata.severity or 'info')|lower|replace('/', ' ')|truncate(20, true, '')|trim %}
-            {% set sevclass = sevclass.split(' ')[0] %}
-            <li class="advisory-row">
-                <div class="advisory-meta">
-                    <span class="badge sev-{{ sevclass }}">{{ (article.metadata.severity or 'Info')|upper }}</span>
-                    <time datetime="{{ article.date.isoformat() }}">{{ article.date|strftime('%Y-%m-%d') }}</time>
-                    {% if article.metadata.state %}<span class="state">{{ article.metadata.state }}</span>{% endif %}
+        {# Sort by severity (critical first) then by date (newest first) #}
+        {% set critical = [] %}
+        {% set high = [] %}
+        {% set medium = [] %}
+        {% set low = [] %}
+        {% set info = [] %}
+        {% for article in advisories %}
+            {% set sev = (article.metadata.severity or 'info')|lower|replace('/', ' ')|trim %}
+            {% set sev = sev.split(' ')[0] %}
+            {% if sev == 'critical' %}{% set _ = critical.append(article) %}
+            {% elif sev == 'high' %}{% set _ = high.append(article) %}
+            {% elif sev == 'medium' %}{% set _ = medium.append(article) %}
+            {% elif sev == 'low' %}{% set _ = low.append(article) %}
+            {% else %}{% set _ = info.append(article) %}{% endif %}
+        {% endfor %}
+        {% set by_severity = critical + high + medium + low + info %}
+        {% set sorted_advisories = by_severity|sort(attribute='date', reverse=true) %}
+
+        {# Partition into disclosed vs embargoed based on Embargo: true metadata #}
+        {% set disclosed = [] %}
+        {% set embargoed = [] %}
+        {% for article in sorted_advisories %}
+            {% if (article.metadata.embargo or '')|lower == 'true' %}
+                {% set _ = embargoed.append(article) %}
+            {% else %}
+                {% set _ = disclosed.append(article) %}
+            {% endif %}
+        {% endfor %}
+
+        <div class="advisory-split">
+            <div class="advisory-col">
+                <div class="advisory-col-head">
+                    <h2>Disclosed</h2>
+                    <span class="col-count">{{ disclosed|length }}</span>
                 </div>
-                <div class="advisory-body">
-                    <h3 class="advisory-title"><a href="{{ SITEURL }}/{{ article.url }}">{{ article.title }}</a></h3>
-                    {% if article.summary %}<p class="advisory-summary">{{ article.summary|striptags }}</p>{% endif %}
-                    <div class="chips">
-                        {% if article.metadata.cve %}<span class="chip chip-cve">{{ article.metadata.cve }}</span>{% endif %}
-                        {% if article.metadata.vendor %}<span class="chip">{{ article.metadata.vendor }}{% if article.metadata.product %} / {{ article.metadata.product }}{% endif %}</span>{% endif %}
-                        {% for tag in article.tags %}<a class="chip" href="{{ SITEURL }}/{{ tag.url }}">#{{ tag }}</a>{% endfor %}
-                    </div>
+                <ul class="advisory-list">
+                    {% for article in disclosed %}
+                    {% set sevclass = (article.metadata.severity or 'info')|lower|replace('/', ' ')|truncate(20, true, '')|trim %}
+                    {% set sevclass = sevclass.split(' ')[0] %}
+                    <li class="advisory-row">
+                        <div class="advisory-meta">
+                            <span class="badge sev-{{ sevclass }}">{{ (article.metadata.severity or 'Info')|upper }}</span>
+                            <time datetime="{{ article.date.isoformat() }}">{{ article.date|strftime('%Y-%m-%d') }}</time>
+                            {% if article.metadata.state %}<span class="state">{{ article.metadata.state }}</span>{% endif %}
+                        </div>
+                        <div class="advisory-body">
+                            <h3 class="advisory-title"><a href="{{ SITEURL }}/{{ article.url }}">{{ article.title }}</a></h3>
+                            {% if article.summary %}<p class="advisory-summary">{{ article.summary|striptags }}</p>{% endif %}
+                            <div class="chips">
+                                {% if article.metadata.cve %}<span class="chip chip-cve">{{ article.metadata.cve }}</span>{% endif %}
+                                {% if article.metadata.vendor %}<span class="chip">{{ article.metadata.vendor }}{% if article.metadata.product %} / {{ article.metadata.product }}{% endif %}</span>{% endif %}
+                                {% for tag in article.tags %}<a class="chip" href="{{ SITEURL }}/{{ tag.url }}">#{{ tag }}</a>{% endfor %}
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                    {% if not disclosed %}<li><p class="empty">// No disclosed advisories.</p></li>{% endif %}
+                </ul>
+            </div>
+
+            <div class="advisory-split-divider"></div>
+
+            <div class="advisory-col">
+                <div class="advisory-col-head">
+                    <h2>Under Embargo</h2>
+                    <span class="col-count">{{ embargoed|length }}</span>
                 </div>
-            </li>
-            {% endfor %}
-        </ul>
+                <ul class="advisory-list">
+                    {% for article in embargoed %}
+                    {% set sevclass = (article.metadata.severity or 'info')|lower|replace('/', ' ')|truncate(20, true, '')|trim %}
+                    {% set sevclass = sevclass.split(' ')[0] %}
+                    <li class="advisory-row">
+                        <div class="advisory-meta">
+                            <span class="badge sev-{{ sevclass }}">{{ (article.metadata.severity or 'Info')|upper }}</span>
+                            <time datetime="{{ article.date.isoformat() }}">{{ article.date|strftime('%Y-%m-%d') }}</time>
+                            {% if article.metadata.state %}<span class="state">{{ article.metadata.state }}</span>{% endif %}
+                        </div>
+                        <div class="advisory-body">
+                            <h3 class="advisory-title"><a href="{{ SITEURL }}/{{ article.url }}">{{ article.title }}</a></h3>
+                            {% if article.summary %}<p class="advisory-summary">{{ article.summary|striptags }}</p>{% endif %}
+                            <div class="chips">
+                                {% if article.metadata.cve %}<span class="chip chip-cve">{{ article.metadata.cve }}</span>{% endif %}
+                                {% if article.metadata.vendor %}<span class="chip">{{ article.metadata.vendor }}{% if article.metadata.product %} / {{ article.metadata.product }}{% endif %}</span>{% endif %}
+                                {% for tag in article.tags %}<a class="chip" href="{{ SITEURL }}/{{ tag.url }}">#{{ tag }}</a>{% endfor %}
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                    {% if not embargoed %}<li><p class="empty">// No embargoed advisories.</p></li>{% endif %}
+                </ul>
+            </div>
+        </div>
         {% else %}
         <p class="empty">// No advisories yet. Drop a Markdown file into content/advisories/ to publish one.</p>
         {% endif %}

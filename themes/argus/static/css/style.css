@@ -52,6 +52,7 @@ a { color: var(--argus-ink); text-decoration: none; transition: color .2s var(--
 a:hover { color: var(--argus-cyan); }
 
 .container { max-width: 1080px; margin: 0 auto; padding: 0 40px; }
+.container-wide { max-width: 1400px; margin: 0 auto; padding: 0 40px; }
 
 .eyebrow {
   font-family: var(--font-mono);
@@ -174,6 +175,47 @@ a:hover { color: var(--argus-cyan); }
   letter-spacing: -0.015em;
   margin: 0;
 }
+
+/* ============================================================
+   Advisory split layout
+   ============================================================ */
+.advisory-split {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: 0 40px;
+  align-items: start;
+}
+.advisory-split-divider {
+  background: var(--argus-line-strong);
+  align-self: stretch;
+}
+.advisory-col-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--argus-line);
+  margin-bottom: 8px;
+}
+.advisory-col-head h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+.col-count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--argus-ink-faint);
+  background: var(--argus-paper-3);
+  border: 1px solid var(--argus-line);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+.advisory-col .advisory-row { grid-template-columns: 1fr; gap: 12px; }
+.advisory-col .advisory-meta { flex-direction: row; align-items: center; gap: 10px; }
 
 /* ============================================================
    Advisory list
@@ -352,6 +394,9 @@ a.chip:hover { color: var(--argus-ink); border-color: var(--argus-line-strong); 
   .container { padding: 0 22px; }
   .nav { padding: 14px 22px; }
   .nav-links { gap: 16px; }
+  .advisory-split { grid-template-columns: 1fr; gap: 48px 0; }
+  .advisory-split-divider { display: none; }
+  .advisory-col .advisory-row { grid-template-columns: 1fr; }
   .advisory-row { grid-template-columns: 1fr; gap: 16px; }
   .advisory-meta { flex-direction: row; align-items: center; }
   .facts { grid-template-columns: 1fr; gap: 4px 0; }
