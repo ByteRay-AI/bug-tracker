@@ -33,7 +33,7 @@ jobs:
         env:
           # Defaults to the custom domain; override with a repository variable if it changes.
           # Override by setting a repository variable SITEURL if you use a custom domain.
-          SITEURL: ${{ vars.SITEURL || 'https://poc.argus-systems.ai' }}
+          SITEURL: ${{ vars.SITEURL || 'https://pop.argus-systems.ai' }}
         run: |
           uv run pelican content --settings publishconf.py
 
