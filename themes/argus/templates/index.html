@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block body %}
-{% set advisories = articles_page.object_list if articles_page else articles %}
+{% set all_advisories = articles if articles else (articles_page.object_list if articles_page else []) %}
 
 <header class="hero">
     <div class="hero-eye"></div>
@@ -10,7 +10,6 @@
         <p class="eyebrow">Public Security Advisories</p>
         <h1>Proof of <span class="accent">Possession.</span></h1>
         <p class="lede">Coordinated vulnerability disclosures from Argus. Findings, impact, and remediation, published in good faith.</p>
-        {% set all_advisories = articles if articles else advisories %}
         {% set ns = namespace(critical=0, high=0) %}
         {% for a in all_advisories %}
             {% set sev = (a.metadata.severity or '')|lower %}
@@ -40,14 +39,14 @@
 
 <section class="section">
     <div class="container-wide">
-        {% if advisories %}
-        {# Sort by severity (critical first) then by date (newest first) #}
+        {% if all_advisories %}
+        {# Sort by date (newest first), then severity (critical first) #}
         {% set critical = [] %}
         {% set high = [] %}
         {% set medium = [] %}
         {% set low = [] %}
         {% set info = [] %}
-        {% for article in advisories %}
+        {% for article in all_advisories %}
             {% set sev = (article.metadata.severity or 'info')|lower|replace('/', ' ')|trim %}
             {% set sev = sev.split(' ')[0] %}
             {% if sev == 'critical' %}{% set _ = critical.append(article) %}
@@ -69,6 +68,15 @@
                 {% set _ = disclosed.append(article) %}
             {% endif %}
         {% endfor %}
+        {% set page_num = articles_page.number if articles_page else 1 %}
+        {% set per_page = DEFAULT_PAGINATION if DEFAULT_PAGINATION else (all_advisories|length if all_advisories else 1) %}
+        {% set start = (page_num - 1) * per_page %}
+        {% set end = start + per_page %}
+        {% set disclosed_page = disclosed[start:end] %}
+        {% set embargoed_page = embargoed[start:end] %}
+        {% set disclosed_pages = (disclosed|length + per_page - 1) // per_page %}
+        {% set embargoed_pages = (embargoed|length + per_page - 1) // per_page %}
+        {% set total_pages = disclosed_pages if disclosed_pages > embargoed_pages else embargoed_pages %}
 
         <div class="advisory-split">
             <div class="advisory-col">
@@ -77,7 +85,7 @@
                     <span class="col-count">{{ disclosed|length }}</span>
                 </div>
                 <ul class="advisory-list">
-                    {% for article in disclosed %}
+                    {% for article in disclosed_page %}
                     {% set sevclass = (article.metadata.severity or 'info')|lower|replace('/', ' ')|truncate(20, true, '')|trim %}
                     {% set sevclass = sevclass.split(' ')[0] %}
                     <li class="advisory-row">
@@ -97,7 +105,9 @@
                         </div>
                     </li>
                     {% endfor %}
-                    {% if not disclosed %}<li><p class="empty">// No disclosed advisories.</p></li>{% endif %}
+                    {% if not disclosed_page %}
+                    <li><p class="empty">{% if disclosed %}// No disclosed advisories on this page.{% else %}// No disclosed advisories.{% endif %}</p></li>
+                    {% endif %}
                 </ul>
             </div>
 
@@ -109,7 +119,7 @@
                     <span class="col-count">{{ embargoed|length }}</span>
                 </div>
                 <ul class="advisory-list">
-                    {% for article in embargoed %}
+                    {% for article in embargoed_page %}
                     {% set sevclass = (article.metadata.severity or 'info')|lower|replace('/', ' ')|truncate(20, true, '')|trim %}
                     {% set sevclass = sevclass.split(' ')[0] %}
                     <li class="advisory-row">
@@ -129,7 +139,9 @@
                         </div>
                     </li>
                     {% endfor %}
-                    {% if not embargoed %}<li><p class="empty">// No embargoed advisories.</p></li>{% endif %}
+                    {% if not embargoed_page %}
+                    <li><p class="empty">{% if embargoed %}// No embargoed advisories on this page.{% else %}// No embargoed advisories.{% endif %}</p></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -137,11 +149,18 @@
         <p class="empty">// No advisories yet. Drop a Markdown file into content/advisories/ to publish one.</p>
         {% endif %}
 
-        {% if articles_page and articles_paginator.num_pages > 1 %}
+        {% if total_pages > 1 %}
         <nav class="pagination">
-            {% if articles_page.has_previous() %}<a href="{{ SITEURL }}/{{ articles_previous_page.url }}">&larr; Newer</a>{% endif %}
-            <span>Page {{ articles_page.number }} / {{ articles_paginator.num_pages }}</span>
-            {% if articles_page.has_next() %}<a href="{{ SITEURL }}/{{ articles_next_page.url }}">Older &rarr;</a>{% endif %}
+            {% if page_num > 1 %}
+            {% set prev_num = page_num - 1 %}
+            {% set prev_url = (SITEURL ~ '/') if prev_num == 1 else (SITEURL ~ '/index' ~ prev_num ~ '.html') %}
+            <a href="{{ prev_url }}">&larr; Newer</a>
+            {% endif %}
+            <span>Page {{ page_num }} / {{ total_pages }}</span>
+            {% if page_num < total_pages %}
+            {% set next_url = SITEURL ~ '/index' ~ (page_num + 1) ~ '.html' %}
+            <a href="{{ next_url }}">Older &rarr;</a>
+            {% endif %}
         </nav>
         {% endif %}
     </div>
