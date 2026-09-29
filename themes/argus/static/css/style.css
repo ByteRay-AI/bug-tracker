@@ -335,7 +335,7 @@ a.chip:hover { color: var(--argus-ink); border-color: var(--argus-line-strong); 
   border-radius: 18px;
 }
 .facts dt { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--argus-ink-faint); align-self: center; }
-.facts dd { margin: 0; font-family: var(--font-mono); font-size: 0.92rem; color: var(--argus-ink); }
+.facts dd { margin: 0; font-family: var(--font-mono); font-size: 0.92rem; color: var(--argus-ink); overflow-wrap: anywhere; }
 
 .advisory-content { font-size: 1.05rem; line-height: 1.7; max-width: 70ch; }
 .advisory-content h2 {

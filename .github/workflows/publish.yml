@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Validate advisories
+        run: uv run python scripts/validate_advisories.py
+
       - name: Build site
         env:
           # Defaults to the custom domain; override with a repository variable if it changes.

@@ -1,54 +1,116 @@
-Title: Short descriptive advisory title
-Date: 2026-06-05 12:00
-Severity: Critical
+BYTE RAY ADVISORY TEMPLATE
+==========================
+
+Read ../../ADVISORY_AUTHORING.md before using this file. The guide is the
+source of truth. This .txt extension prevents Pelican from publishing the
+examples.
+
+PUBLIC EMBARGO NOTICE
+---------------------
+
+Title: Vendor Product — Security Issue Under Coordinated Disclosure
+Date: YYYY-MM-DD
+Slug: BYTERAY-YYYY-NNNN
+Advisory: BYTERAY-YYYY-NNNN
+Format: 1
 State: Reported
+Embargo: true
+Vendor: Vendor name or [WITHHELD UNTIL DISCLOSURE]
+Product: Product name or [WITHHELD UNTIL DISCLOSURE]
+Reported: YYYY-MM-DD or [WITHHELD UNTIL DISCLOSURE]
+Disclosure: Planned YYYY-MM-DD or [WITHHELD UNTIL DISCLOSURE]
+Commitment: sha256:64-lowercase-hex-characters
+Summary: Technical details are withheld during coordinated disclosure.
+
+## Disclosure Notice
+
+Technical details are withheld during coordinated disclosure. This page will
+be updated in place when disclosure is permitted.
+
+## Proof of Possession
+
+The commitment above records ByteRay's possession of the private report
+without publishing the report or material that assists vulnerability discovery.
+
+
+FULL DISCLOSURE
+---------------
+
+Keep the embargo file's filename, Slug, and Advisory unchanged. Remove the
+Embargo field.
+
+Title: Product — Vulnerability Class in Component
+Date: YYYY-MM-DD
+Slug: BYTERAY-YYYY-NNNN
+Advisory: BYTERAY-YYYY-NNNN
+Format: 1
+Severity: High
+State: Disclosed
 Vendor: Vendor name
 Product: Product name
-Affected: <= 1.2.3
-Fixed: 1.2.4
-CVE: CVE-2026-NNNNN
-CVSS: 0.0 (vector string)
-Credit: Argus
-Tags: rce, web
-Summary: One- or two-sentence summary shown in the advisory list on the homepage.
+Reported: YYYY-MM-DD
+Disclosure: YYYY-MM-DD
+Affected: Exact affected versions
+Fixed: Exact fixed version or commit
+CVE: CVE-YYYY-NNNN
+CWE: CWE-NNN
+CVSS: 0.0 (CVSS:3.1/...)
+Credit: Researcher or team
+Tags: relevant, comma-separated, tags
+Commitment: sha256:64-lowercase-hex-characters
+Summary: One or two factual sentences describing the flaw and its impact.
 
-## Summary
+## Executive Summary
 
-What the issue is, in a sentence or two.
+Explain the issue and practical consequence in plain language.
 
-## Affected Versions
+## Affected Products and Versions
 
-- Product `<= x.y.z`
+List exact products, components, configurations, and version boundaries.
 
-## Details
+## Technical Details
 
-Technical details, proof of concept, request/response, etc.
+Describe the root cause and vulnerable data or control flow.
+
+## Reachability and Preconditions
+
+State attacker position, authentication, privileges, user interaction,
+configuration, and other prerequisites.
 
 ## Impact
 
-What an attacker can achieve.
+Describe the confirmed consequence of exploitation.
 
-## Remediation
+## Remediation and Mitigation
 
-How to fix or mitigate.
+Link the fix, identify the first fixed version, and explain mitigations.
 
 ## Timeline
 
-- 2026-06-01 — Reported to vendor
-- 2026-06-05 — Public disclosure
+- YYYY-MM-DD — Reported to vendor
+- YYYY-MM-DD — Vendor acknowledged
+- YYYY-MM-DD — Fix released
+- YYYY-MM-DD — Public disclosure
 
-<!--
-HOW TO ADD A NEW ADVISORY
-=========================
-1. Copy this file into content/advisories/ and rename it, e.g.
-   2026-06-10-vendor-product-issue.md  (the date prefix keeps the folder tidy;
-   the actual sort order comes from the "Date:" metadata above).
-2. Fill in the metadata block at the top. Required: Title, Date. Everything
-   else is optional and only shown if present.
-   - Severity:  Critical | High | Medium | Low | Info  (drives the badge color)
-   - State:     free text, e.g. Reported / Disclosed / Patched / Won't Fix
-   - Do NOT use a field called "Status:" — Pelican reserves it for draft/publish.
-   - To keep an advisory as an unpublished draft, add a line:  Status: draft
-3. Rebuild:  uv run pelican content      (or  uv run pelican --autoreload --listen
-   for a live-reloading preview at http://localhost:8000)
--->
+## Credits
+
+Credit the finder, collaborators, coordinator, and vendor responders as agreed.
+
+## References
+
+- [Vendor advisory](https://example.com/)
+- [Fix](https://example.com/)
+
+
+OPERATIONAL NOTES
+-----------------
+
+- Allocate the next ID with:
+  uv run python scripts/validate_advisories.py --next-id
+- Validate with:
+  uv run python scripts/validate_advisories.py
+- Build with:
+  uv run pelican content --settings publishconf.py
+- `Status: draft` prevents publication. It is not a public embargo.
+- Never put private details in comments, attachments, filenames, or Git history.
+- Never commit or push as part of an authoring prompt unless explicitly asked.

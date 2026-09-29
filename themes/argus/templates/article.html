@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}{{ article.title }} &middot; {{ SITENAME }}{% endblock %}
+{% block title %}{% if article.metadata.advisory %}{{ article.metadata.advisory }} &middot; {% endif %}{{ article.title }} &middot; {{ SITENAME }}{% endblock %}
 
 {% block body %}
+{% set is_embargoed = (article.metadata.embargo or '')|lower == 'true' %}
 {% set sevclass = (article.metadata.severity or 'info')|lower|replace('/', ' ')|trim %}
 {% set sevclass = sevclass.split(' ')[0] %}
 <article class="advisory">
@@ -11,7 +12,12 @@
 
         <header class="advisory-header">
             <div class="row">
+                {% if is_embargoed %}
+                <span class="badge sev-info">EMBARGO</span>
+                {% else %}
                 <span class="badge sev-{{ sevclass }}">{{ (article.metadata.severity or 'Info')|upper }}</span>
+                {% endif %}
+                {% if article.metadata.advisory %}<span class="state">{{ article.metadata.advisory }}</span>{% endif %}
                 {% if article.metadata.state %}<span class="state">{{ article.metadata.state }}</span>{% endif %}
                 <time class="mono muted" datetime="{{ article.date.isoformat() }}" style="font-size:0.85rem;">{{ article.date|strftime('%Y-%m-%d') }}</time>
             </div>
@@ -20,20 +26,33 @@
         </header>
 
         <dl class="facts">
+            {% if article.metadata.advisory %}<dt>Advisory</dt><dd>{{ article.metadata.advisory }}</dd>{% endif %}
+            {% if is_embargoed %}
+            {% if article.metadata.vendor %}<dt>Vendor</dt><dd>{{ article.metadata.vendor }}</dd>{% endif %}
+            {% if article.metadata.product %}<dt>Product</dt><dd>{{ article.metadata.product }}</dd>{% endif %}
+            {% if article.metadata.reported %}<dt>Reported</dt><dd>{{ article.metadata.reported }}</dd>{% endif %}
+            {% if article.metadata.disclosure %}<dt>Disclosure</dt><dd>{{ article.metadata.disclosure }}</dd>{% endif %}
+            {% if article.metadata.commitment %}<dt>Commitment</dt><dd>{{ article.metadata.commitment }}</dd>{% endif %}
+            {% else %}
             {% if article.metadata.cve %}<dt>CVE</dt><dd>{{ article.metadata.cve }}</dd>{% endif %}
+            {% if article.metadata.cwe %}<dt>CWE</dt><dd>{{ article.metadata.cwe }}</dd>{% endif %}
             {% if article.metadata.cvss %}<dt>CVSS</dt><dd>{{ article.metadata.cvss }}</dd>{% endif %}
             {% if article.metadata.vendor %}<dt>Vendor</dt><dd>{{ article.metadata.vendor }}</dd>{% endif %}
             {% if article.metadata.product %}<dt>Product</dt><dd>{{ article.metadata.product }}</dd>{% endif %}
+            {% if article.metadata.reported %}<dt>Reported</dt><dd>{{ article.metadata.reported }}</dd>{% endif %}
+            {% if article.metadata.disclosure %}<dt>Disclosure</dt><dd>{{ article.metadata.disclosure }}</dd>{% endif %}
             {% if article.metadata.affected %}<dt>Affected</dt><dd>{{ article.metadata.affected }}</dd>{% endif %}
             {% if article.metadata.fixed %}<dt>Fixed in</dt><dd>{{ article.metadata.fixed }}</dd>{% endif %}
             {% if article.metadata.credit %}<dt>Credit</dt><dd>{{ article.metadata.credit }}</dd>{% endif %}
+            {% if article.metadata.commitment %}<dt>Commitment</dt><dd>{{ article.metadata.commitment }}</dd>{% endif %}
+            {% endif %}
         </dl>
 
         <div class="advisory-content">
             {{ article.content }}
         </div>
 
-        {% if article.tags %}
+        {% if not is_embargoed and article.tags %}
         <footer class="advisory-footer">
             <div class="chips">
                 {% for tag in article.tags %}<a class="chip" href="{{ SITEURL }}/{{ tag.url }}">#{{ tag }}</a>{% endfor %}
