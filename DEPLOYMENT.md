@@ -32,7 +32,7 @@ flowchart LR
 | Pages custom domain | GitHub repository Settings > Pages | `pop.byteray.co.uk` |
 | `pop` DNS record, byteray.co.uk | Cloudflare > byteray.co.uk > DNS | CNAME `byteray-ai.github.io`, Proxied |
 | SSL/TLS encryption mode, byteray.co.uk | Cloudflare > byteray.co.uk > SSL/TLS | Full or Flexible, not Full (strict) |
-| HTTP to HTTPS upgrade for `pop` | Cloudflare > byteray.co.uk | On |
+| HTTP to HTTPS upgrade | Cloudflare > byteray.co.uk > SSL/TLS > Edge Certificates > Always Use HTTPS | On (still off; see follow-ups) |
 | Redirect Worker and its route | `infra/cloudflare/pop-argus-redirect/` | Route `pop.argus-systems.ai/*` |
 | `pop` DNS record, argus-systems.ai | Cloudflare > argus-systems.ai > DNS | Any proxied record; the Worker answers first |
 
@@ -96,9 +96,11 @@ curl -sI https://pop.byteray.co.uk/advisory/adv-038.html
 # 301 to https://pop.byteray.co.uk/advisory/BYTERAY-2026-0220.html?x=1
 curl -sI 'https://pop.argus-systems.ai/advisory/BYTERAY-2026-0220.html?x=1'
 
-# Redirect to https://pop.byteray.co.uk/
-curl -sI http://pop.byteray.co.uk/
+# Ends on https://pop.byteray.co.uk/
 curl -sIL https://byteray-ai.github.io/bug-tracker/ | grep -i '^location'
+
+# Redirects to https:// once Always Use HTTPS is on (see follow-ups)
+curl -sI http://pop.byteray.co.uk/
 
 # pop.byteray.co.uk
 gh api repos/ByteRay-AI/bug-tracker/pages --jq .cname
@@ -158,7 +160,55 @@ on GitHub serving `pop.argus-systems.ai`.
 
 ### Rollback
 
-Until step 8, the old arrangement can be restored in this order: detach the
+Until step 8, the old arrangement could be restored in this order: detach the
 redirect route, set the Pages custom domain back to `pop.argus-systems.ai`,
-then recreate the route `pop.byteray.co.uk/*` for `pop-byteray-proxy`. After
-step 8, restoring it would require a new proxy Worker; fix forward instead.
+then recreate the route `pop.byteray.co.uk/*` for `pop-byteray-proxy`. Step 8
+is done, so restoring it now would require a new proxy Worker. Fix forward
+instead.
+
+### What happened
+
+All times are UTC on 2026-10-14.
+
+- Before the cutover, the `pop.byteray.co.uk` DNS record turned out to be a
+  placeholder that only the proxy Worker could serve (bypassing the Worker gave
+  error 522). It was changed to CNAME `byteray-ai.github.io`, Proxied.
+- 17:58: the first build with `SITEURL=https://pop.byteray.co.uk` deployed
+  while GitHub Pages still served `pop.argus-systems.ai`.
+- 17:59: `pop-argus-redirect` was uploaded without a route.
+- 18:01:25: the Pages custom domain was set to `pop.byteray.co.uk`. GitHub
+  served the new hostname within about a second.
+- 18:01:27: the proxy route was deleted. After a 45-second propagation margin,
+  the redirect route was attached at 18:02:21 and was live by 18:02:31.
+- Impact: `pop.byteray.co.uk` was unavailable for at most about 10 seconds;
+  `pop.argus-systems.ai` returned 404 for about a minute.
+- Checks: all 287 generated files return 200 on `pop.byteray.co.uk`, and the
+  `pop.argus-systems.ai` URL of each one returns a 301 to the same path on
+  `pop.byteray.co.uk`. The home page shows 187 advisories, 5 Critical, 16 High,
+  latest 2026.
+- No cache purge was needed. Cloudflare held no cached `pop.byteray.co.uk`
+  responses while the proxy answered every request, and the proxy was removed
+  only after GitHub served the hostname, so no error responses were cached.
+- The domain guard was added to the workflow, and the `pop-byteray-proxy`
+  Worker was deleted after these checks passed.
+- Atom entry ids changed from `tag:pop.argus-systems.ai,…` to
+  `tag:pop.byteray.co.uk,…`, so feed readers may show existing entries as new
+  once.
+
+## Follow-ups
+
+- Turn on Always Use HTTPS for `byteray.co.uk` (SSL/TLS > Edge Certificates).
+  Until then, `http://` URLs on `pop.byteray.co.uk`, `blog.byteray.co.uk`, and
+  `byteray.co.uk` are served without an upgrade to HTTPS. Before the migration,
+  the proxy Worker performed the upgrade for `pop`. All links the site
+  generates already use `https://`.
+- Replace the `pop.argus-systems.ai` DNS record, which still points at GitHub
+  Pages, with a placeholder such as `AAAA 100::`, Proxied. The Worker answers
+  every request either way, but a record pointing at GitHub Pages for a
+  hostname no Pages site claims could be taken over by another GitHub account
+  if the Worker route were ever removed.
+- Verify `byteray.co.uk` and `argus-systems.ai` as domains of the ByteRay-AI
+  GitHub organization (organization Settings > Pages). This stops other GitHub
+  accounts from claiming their subdomains.
+- In Google Search Console, use Change of Address to move the
+  `pop.argus-systems.ai` property to `pop.byteray.co.uk`.
