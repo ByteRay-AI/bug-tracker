@@ -43,7 +43,7 @@ For example:
 Advisory: BYTERAY-2026-0211
 Filename: content/advisories/BYTERAY-2026-0211.md
 Slug: BYTERAY-2026-0211
-URL: /advisory/BYTERAY-2026-0211.html
+URL: https://pop.byteray.co.uk/advisory/BYTERAY-2026-0211.html
 ```
 
 Legacy mapping preserves the numeric relationship and all old links:
@@ -280,7 +280,8 @@ Repository rules:
   length, PoC details, or word-length-preserving redactions.
 - Do not put private facts in comments, attachments, Git history, or generated
   files.
-- Run the advisory validator and Pelican production build.
+- Run the advisory validator, the Pelican production build, and the site
+  verifier.
 - Do not commit or push.
 ```
 
@@ -301,12 +302,27 @@ Repository rules:
 - Replace the embargo body with the canonical full-disclosure chapters.
 - Retain Commitment and add verification material only if the exact report and
   nonce are being published.
-- Run the advisory validator and Pelican production build.
+- Run the advisory validator, the Pelican production build, and the site
+  verifier.
 - Verify the output path is identical to the embargo page path.
 - Do not commit or push.
 ```
 
 ## 9. Pre-publication checklist
+
+Run these from the repository root before every commit that touches an
+advisory:
+
+```bash
+uv run python scripts/validate_advisories.py
+uv run pelican content --settings publishconf.py
+uv run python scripts/verify_site.py
+```
+
+The validator prints the numbers the home page will show. The verifier fails
+if the built pages disagree with them, if an advisory page is missing, or if
+any page links to an origin other than `https://pop.byteray.co.uk`. CI runs the
+same three steps and blocks the deploy if any of them fails.
 
 ### Every advisory
 
@@ -317,6 +333,9 @@ Repository rules:
 - No unrelated or private files are staged.
 - `uv run python scripts/validate_advisories.py` passes.
 - `uv run pelican content --settings publishconf.py` passes.
+- `uv run python scripts/verify_site.py` passes.
+- Links to the advisory in vendor reports, CVE records, and posts use
+  `https://pop.byteray.co.uk/advisory/<Slug>.html`.
 
 ### Embargo notice
 
@@ -335,7 +354,28 @@ Repository rules:
 - Preconditions and confirmed impact are distinguished from speculation.
 - Timeline and credits reflect the coordinated record.
 
-## 10. Research basis
+## 10. Domains and URLs
+
+- The only public origin is `https://pop.byteray.co.uk`. An advisory's
+  permanent URL is `https://pop.byteray.co.uk/advisory/<Slug>.html`. Use that
+  form in vendor reports, CVE references, blog posts, and social media.
+- `pop.argus-systems.ai` is retired. Every URL on it permanently redirects
+  (HTTP 301) to the same path on `pop.byteray.co.uk`, so links already
+  published with the old domain keep working. Never publish a new
+  `pop.argus-systems.ai` link; `verify_site.py` rejects any build containing
+  one.
+- Every page declares its `pop.byteray.co.uk` URL as canonical, so search
+  engines consolidate on the ByteRay domain.
+- The home-page numbers (Advisories, Critical, High, Latest, and the Disclosed
+  and Under Embargo counts) are computed from the advisory files at build time.
+  Never edit them by hand. Critical and High count disclosed advisories only,
+  because severity is withheld during embargo.
+- After a deploy, browsers and GitHub's CDN can keep showing the previous
+  version of a page for up to 10 minutes.
+
+Hosting and domain configuration are documented in `DEPLOYMENT.md`.
+
+## 11. Research basis
 
 - [CERT/CC Basic Vulnerability Advisory](https://certcc.github.io/CERT-Guide-to-CVD/reference/simple_advisory/)
 - [CERT/CC Vulnerability Note guidance](https://certcc.github.io/VINCE-docs/Vulnerability-Note-Help/)

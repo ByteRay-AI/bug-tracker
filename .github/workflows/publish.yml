@@ -18,6 +18,10 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Canonical public origin. A repository variable SITEURL overrides it, and
+      # the GitHub Pages custom domain must always match it (see DEPLOYMENT.md).
+      SITEURL: ${{ vars.SITEURL || 'https://pop.byteray.co.uk' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
@@ -33,12 +37,10 @@ jobs:
         run: uv run python scripts/validate_advisories.py
 
       - name: Build site
-        env:
-          # Defaults to the custom domain; override with a repository variable if it changes.
-          # Override by setting a repository variable SITEURL if you use a custom domain.
-          SITEURL: ${{ vars.SITEURL || 'https://pop.argus-systems.ai' }}
-        run: |
-          uv run pelican content --settings publishconf.py
+        run: uv run pelican content --settings publishconf.py
+
+      - name: Verify built site
+        run: uv run python scripts/verify_site.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{{ SITENAME }}{% endblock %}</title>
+    {% block canonical %}<link rel="canonical" href="{{ SITEURL }}/{% if output_file != 'index.html' %}{{ output_file }}{% endif %}">{% endblock %}
     <link rel="icon" type="image/png" href="{{ SITEURL }}/theme/assets/argus-logo-monogram.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

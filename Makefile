@@ -1,4 +1,5 @@
 PY?=
+PYTHON?=python3
 PELICAN?=pelican
 PELICANOPTS=
 
@@ -35,6 +36,7 @@ help:
 	@echo '   make clean                          remove the generated files         '
 	@echo '   make regenerate                     regenerate files upon modification '
 	@echo '   make publish                        generate using production settings '
+	@echo '   make verify                         check output/ against the advisories'
 	@echo '   make serve [PORT=8000]              serve site at http://localhost:8000'
 	@echo '   make serve-global [SERVER=0.0.0.0]  serve (as root) to $(SERVER):80    '
 	@echo '   make devserver [PORT=8000]          serve and regenerate together      '
@@ -68,5 +70,9 @@ devserver-global:
 publish:
 	"$(PELICAN)" "$(INPUTDIR)" -o "$(OUTPUTDIR)" -s "$(PUBLISHCONF)" $(PELICANOPTS)
 
+verify:
+	$(PYTHON) "$(BASEDIR)/scripts/validate_advisories.py"
+	$(PYTHON) "$(BASEDIR)/scripts/verify_site.py" --output "$(OUTPUTDIR)"
 
-.PHONY: html help clean regenerate serve serve-global devserver devserver-global publish 
+
+.PHONY: html help clean regenerate serve serve-global devserver devserver-global publish verify

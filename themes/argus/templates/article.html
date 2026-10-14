@@ -2,6 +2,8 @@
 
 {% block title %}{% if article.metadata.advisory %}{{ article.metadata.advisory }} &middot; {% endif %}{{ article.title }} &middot; {{ SITENAME }}{% endblock %}
 
+{% block canonical %}<link rel="canonical" href="{{ SITEURL }}/{{ article.url }}">{% endblock %}
+
 {% block body %}
 {% set is_embargoed = (article.metadata.embargo or '')|lower == 'true' %}
 {% set sevclass = (article.metadata.severity or 'info')|lower|replace('/', ' ')|trim %}

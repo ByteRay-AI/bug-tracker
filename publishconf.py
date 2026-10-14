@@ -7,10 +7,10 @@ import sys
 sys.path.append(os.curdir)
 from pelicanconf import *
 
-# If your site is available via HTTPS, make sure SITEURL begins with https://
-# SITEURL is injected at build time by the CI workflow via --extra-settings.
-# For a local publish build: pelican content -s publishconf.py --extra-settings "SITEURL='https://your-org.github.io/argus-pop'"
-SITEURL = os.environ.get("SITEURL", "")
+# Canonical public origin. The CI workflow may override it through the SITEURL
+# environment variable; the GitHub Pages custom domain must match it either way
+# (see DEPLOYMENT.md).
+SITEURL = (os.environ.get("SITEURL") or "https://pop.byteray.co.uk").rstrip("/")
 RELATIVE_URLS = False
 
 FEED_ALL_ATOM = "feeds/all.atom.xml"

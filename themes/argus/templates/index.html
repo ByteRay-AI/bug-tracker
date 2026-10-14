@@ -18,19 +18,19 @@
         {% endfor %}
         <div class="hero-stats">
             <div class="hero-stat">
-                <div class="n">{{ all_advisories|length }}</div>
+                <div class="n" data-stat="total">{{ all_advisories|length }}</div>
                 <div class="l">Advisories</div>
             </div>
             <div class="hero-stat">
-                <div class="n" style="color:var(--sev-critical)">{{ ns.critical }}</div>
+                <div class="n" style="color:var(--sev-critical)" data-stat="critical">{{ ns.critical }}</div>
                 <div class="l">Critical</div>
             </div>
             <div class="hero-stat">
-                <div class="n gold">{{ ns.high }}</div>
+                <div class="n gold" data-stat="high">{{ ns.high }}</div>
                 <div class="l">High</div>
             </div>
             <div class="hero-stat">
-                <div class="n">{{ all_advisories|map(attribute='date.year')|list|first or '—' }}</div>
+                <div class="n" data-stat="latest-year">{{ all_advisories|map(attribute='date.year')|list|first or '—' }}</div>
                 <div class="l">Latest</div>
             </div>
         </div>
@@ -82,7 +82,7 @@
             <div class="advisory-col">
                 <div class="advisory-col-head">
                     <h2>Disclosed</h2>
-                    <span class="col-count">{{ disclosed|length }}</span>
+                    <span class="col-count" data-count="disclosed">{{ disclosed|length }}</span>
                 </div>
                 <ul class="advisory-list">
                     {% for article in disclosed_page %}
@@ -117,7 +117,7 @@
             <div class="advisory-col">
                 <div class="advisory-col-head">
                     <h2>Under Embargo</h2>
-                    <span class="col-count">{{ embargoed|length }}</span>
+                    <span class="col-count" data-count="embargoed">{{ embargoed|length }}</span>
                 </div>
                 <ul class="advisory-list">
                     {% for article in embargoed_page %}

@@ -72,7 +72,9 @@ FULL_HEADINGS = [
     "References",
 ]
 STATES = {"Reported", "Disclosed", "Patched", "Won't Fix"}
-SEVERITIES = {"Critical", "High", "Medium", "Low", "Info"}
+SEVERITY_ORDER = ("Critical", "High", "Medium", "Low", "Info")
+SEVERITIES = set(SEVERITY_ORDER)
+CANONICAL_SEVERITY = {severity.casefold(): severity for severity in SEVERITY_ORDER}
 
 
 @dataclass
@@ -85,6 +87,26 @@ class Advisory:
     @property
     def embargoed(self) -> bool:
         return self.metadata.get("embargo", "").lower() == "true"
+
+    @property
+    def status(self) -> str:
+        """Pelican build status: only `published` advisories are listed."""
+        return (self.metadata.get("status") or "published").lower()
+
+
+@dataclass(frozen=True)
+class AdvisoryStats:
+    """Numbers the home page derives from the listed advisories."""
+
+    total: int
+    disclosed: int
+    embargoed: int
+    severities: dict[str, int]
+    newest: Advisory | None
+
+    @property
+    def latest_year(self) -> str:
+        return self.newest.metadata["date"][:4] if self.newest else "—"
 
 
 def parse_advisory(path: Path) -> Advisory:
@@ -286,6 +308,57 @@ def validate_all(advisories: list[Advisory]) -> list[str]:
     return errors
 
 
+def identifier_key(advisory: Advisory) -> tuple[int, int]:
+    match = ADVISORY_RE.fullmatch(advisory.metadata.get("advisory", ""))
+    return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+
+
+def compute_stats(advisories: list[Advisory]) -> AdvisoryStats:
+    """Compute the home-page numbers independently of the Pelican templates.
+
+    Severity is withheld during embargo, so severity counts cover disclosed
+    advisories only.
+    """
+    listed = [advisory for advisory in advisories if advisory.status == "published"]
+    disclosed = [advisory for advisory in listed if not advisory.embargoed]
+    severities = dict.fromkeys(SEVERITY_ORDER, 0)
+    for advisory in disclosed:
+        severity = CANONICAL_SEVERITY.get(advisory.metadata.get("severity", "").casefold())
+        if severity:
+            severities[severity] += 1
+    newest = max(
+        listed,
+        key=lambda advisory: (advisory.metadata.get("date", ""), identifier_key(advisory)),
+        default=None,
+    )
+    return AdvisoryStats(
+        total=len(listed),
+        disclosed=len(disclosed),
+        embargoed=len(listed) - len(disclosed),
+        severities=severities,
+        newest=newest,
+    )
+
+
+def describe_stats(stats: AdvisoryStats, unlisted: int = 0) -> str:
+    lines = [
+        f"Home page will show: {stats.total} advisories, "
+        f"{stats.severities['Critical']} critical, {stats.severities['High']} high, "
+        f"latest {stats.latest_year} "
+        f"({stats.disclosed} disclosed, {stats.embargoed} under embargo).",
+        "Disclosed severities: "
+        + ", ".join(f"{count} {severity}" for severity, count in stats.severities.items())
+        + ".",
+    ]
+    if stats.newest:
+        lines.append(
+            f"Newest: {stats.newest.metadata['advisory']} ({stats.newest.metadata['date']})."
+        )
+    if unlisted:
+        lines.append(f"Not listed (draft or hidden): {unlisted}.")
+    return "\n".join(lines)
+
+
 def next_identifier(advisories: list[Advisory], year: int) -> str:
     numbers = []
     for advisory in advisories:
@@ -334,6 +407,8 @@ def main() -> int:
         f"Validated {len(advisories)} advisories: "
         f"{embargoed} embargoed, {len(advisories) - embargoed} disclosed."
     )
+    stats = compute_stats(advisories)
+    print(describe_stats(stats, unlisted=len(advisories) - stats.total))
     if args.next_id:
         print(next_identifier(advisories, args.year))
     return 0

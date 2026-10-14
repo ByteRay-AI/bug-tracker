@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "pop-argus-redirect",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-14",
+  // The route runs in front of the existing proxied DNS record, so requests never
+  // reach the origin. Never attach it while pop.byteray.co.uk proxies to
+  // pop.argus-systems.ai: the two hostnames would redirect to each other.
+  "routes": [{ "pattern": "pop.argus-systems.ai/*", "zone_name": "argus-systems.ai" }],
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  }
+}
